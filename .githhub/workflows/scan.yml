@@ -1,8 +1,13 @@
 name: scan
 on:
   schedule:
-    - cron: "5 * * * 1-5"
+    - cron: "*/15 * * * 1-5"
   workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: gold-bot
+  cancel-in-progress: false
 jobs:
   run:
     runs-on: ubuntu-latest
@@ -17,3 +22,9 @@ jobs:
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
           CHAT_ID: ${{ secrets.CHAT_ID }}
           TEST: ${{ github.event_name == 'workflow_dispatch' }}
+      - name: Save trade state
+        run: |
+          git config user.name "gold-bot"
+          git config user.email "bot@users.noreply.github.com"
+          git add trades.json
+          git diff --cached --quiet || (git commit -m "update trades" && git push)
